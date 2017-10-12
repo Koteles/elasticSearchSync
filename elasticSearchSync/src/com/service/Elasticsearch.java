@@ -2,18 +2,11 @@ package com.service;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
-import java.util.Timer;
-import java.util.TimerTask;
-
-import javax.persistence.EntityManager;
-import javax.persistence.Persistence;
-
 import java.util.Date;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -26,71 +19,56 @@ import org.json.XML;
  */
 
 public class Elasticsearch {
-	
-	private static int PRETTY_PRINT_INDENT_FACTOR = 4;
-	private static File[] files;
+
 	private static String indexName;
-	private static String syncTimer = "sync.timer";
+	private static int portNumber;
+	private static String host;
 
-	public void addToES() {
-
-		long interval = (long) getInterval(syncTimer);
-		Timer timer = new Timer();
-		timer.schedule(new RemindTask(timer, interval), interval);
-
+	public void addToElasticSearch() {
+		
+		System.out.println("Timer task started at:" + new Date());
+		
+		File[] files = loadFiles();
+		
+		addToElasticSearch(files);
+		
+		System.out.println("Timer task finished at:" + new Date());
 	}
+	
 
-	class RemindTask extends TimerTask {
+	public static File[] loadFiles() {
 
-		Timer timer;
-		long interval;
-
-		RemindTask(Timer currentTimer, long sec) {
-			timer = currentTimer;
-			interval = sec;
-		}
-
-		@Override
-		public void run() {
-
-			System.out.println("Timer task started at:" + new Date());
-
-			loadFiles();
-			addToElasticSearch(files);
-
-			System.out.println("Timer task finished at:" + new Date());
-
-			interval = (long) getInterval(syncTimer);
-
-			timer.schedule(new RemindTask(timer, interval), interval);
-		}
-
-	}
-
-	public static int getInterval(String timer) {
-
-		EntityManager manager = Persistence.createEntityManagerFactory("JavaHelps").createEntityManager();
-
-		Config config = manager.find(Config.class, timer);
-
-		return config.getTime();
-	}
-
-	public static void loadFiles() {
-
+		File[] files = null;
+		
 		Properties p = new Properties();
-
+		
+		ClassLoader loader = Thread.currentThread().getContextClassLoader();
+		
 		InputStream input = null;
+		
 		try {
-			input = new FileInputStream("D:\\dataConfig.properties");
+			
+			input = loader.getResourceAsStream("config.properties");
+			
 			p.load(input);
+			
 			String path = p.getProperty("pathToFiles");
+			
 			indexName = p.getProperty("index");
+			host = p.getProperty("elasticSearchHost").trim();
+			
+			String port = p.getProperty("elasticSearchPort").trim();	
+			
+			portNumber = Integer.parseInt(port);
+			
 			files = new File(path).listFiles();
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		return files;
 	}
 
 	public static void addToElasticSearch(File[] files) {
@@ -111,6 +89,7 @@ public class Elasticsearch {
 
 			String type = null;
 			try {
+				br.readLine();
 				type = br.readLine();
 				line = br.readLine();
 
@@ -121,10 +100,9 @@ public class Elasticsearch {
 					if (br.readLine() != null) {
 						br.readLine();
 						br.reset();
-
 						sb.append(line.trim());
 					}
-				}
+				}				
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -139,6 +117,8 @@ public class Elasticsearch {
 
 			String jsonPrettyPrintString = null;
 
+			final int PRETTY_PRINT_INDENT_FACTOR = 4;
+			
 			try {
 				JSONObject xmlJSONObj = XML.toJSONObject(xml);
 
@@ -152,12 +132,10 @@ public class Elasticsearch {
 
 			} catch (JSONException je) {
 				System.out.println(je.toString());
-			}
+			}			
 			
-			
-			Test.addToElasticSearch(type, id, jsonPrettyPrintString, indexName);
+			Test.addToElasticSearch(type, id, jsonPrettyPrintString, indexName, host, portNumber);
 		}
-
 	}
 
 	public static void showFiles(File[] files) {
