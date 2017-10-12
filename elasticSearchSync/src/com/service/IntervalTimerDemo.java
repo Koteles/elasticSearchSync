@@ -38,7 +38,7 @@ public class IntervalTimerDemo {
 	@Timeout
 	public void execute(Timer timer) {
 
-		Elasticsearch es = new Elasticsearch();
+		ElasticSearchService es = new ElasticSearchService();
 		 es.addToElasticSearch();
 	}
 	
