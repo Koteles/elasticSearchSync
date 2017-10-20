@@ -8,47 +8,36 @@ import javax.ejb.Startup;
 import javax.ejb.Timeout;
 import javax.ejb.Timer;
 import javax.ejb.TimerService;
-import javax.persistence.EntityManager;
-import javax.persistence.Persistence;
-
-import com.model.Config;
+import javax.inject.Inject;
 
 
 /**
- * Session Bean implementation class IntervalTimerDemo
+ * Session Bean that is initialized upon application startup. In this class, a programmatic timer is implemented
  */
+
 @Singleton
 @LocalBean
 @Startup
 public class IntervalTimerDemo {
 
+	@Inject
+	private static ElasticSearchService service;
+	@Inject
+	private static long timer;
 	@Resource
 	private TimerService timerService;
 
 	@PostConstruct
 	private void init() {
 		
-		final String syncTimer = "sync.timer";
-		
-		final long interval = (long) getInterval(syncTimer);
-		
-		timerService.createTimer(0, interval, "IntervalTimerDemo_Info");
+		timerService.createTimer(0, timer, "IntervalTimer");
 	}
 
 	@Timeout
 	public void execute(Timer timer) {
 
-		ElasticSearchService es = new ElasticSearchService();
-		 es.addToElasticSearch();
+		 service.addToElasticSearch();
 	}
 	
-	public static int getInterval(String timer) {
-
-		final EntityManager manager = Persistence.createEntityManagerFactory("JavaHelps").createEntityManager();
-
-		final Config config = manager.find(Config.class, timer);
-
-		return config.getTime();
-	}
 
 }
