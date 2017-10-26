@@ -1,116 +1,101 @@
 package com.service;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Properties;
 
 import javax.enterprise.inject.Produces;
+import javax.persistence.EntityManager;
+import javax.persistence.Persistence;
 
+import org.elasticsearch.client.Client;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
+
+import com.model.Config;
 import com.qualifiers.HostName;
 import com.qualifiers.IndexName;
 import com.qualifiers.TypeName;
 
 public class ResourcesProducer {
 
-
-	private static Properties p;
+	private static Properties properties;
 
 	static {
-		
+
 		final ClassLoader loader = Thread.currentThread().getContextClassLoader();
 
-		p = new Properties();
-		
-		InputStream inputStream = loader.getResourceAsStream("config.properties");
-	
+		properties = new Properties();
+
+		final InputStream inputStream = loader.getResourceAsStream("config.properties");
+
 		try {
-			p.load(inputStream);
+			properties.load(inputStream);
 		} catch (IOException e) {
-			
+
 			e.printStackTrace();
 		}
 	}
 
 	@Produces
+	private Properties produceProperties() {
+		return properties;
+	}
+	
+	@Produces
+	private long produceTimer() {
+		final String syncTimer = "sync.timer";
+		final EntityManager manager = Persistence.createEntityManagerFactory(properties.getProperty("database")).createEntityManager();
+		final Config config = manager.find(Config.class, syncTimer);
+		return config.getTime();
+	}
+	
+	@Produces
 	@IndexName
 	private String produceIndexName() {
-		
-		return p.getProperty("index");
+
+		return properties.getProperty("index");
 	}
 
 	@Produces
 	@HostName
 	private String produceHostName() {
 
-		return p.getProperty("elasticSearchHost").trim();
+		return properties.getProperty("elasticSearchHost").trim();
 
 	}
 
 	@Produces
 	@TypeName
 	private String produceTypeName() {
-	
-		return p.getProperty("type");
+
+		return properties.getProperty("type");
 	}
 
 	@Produces
 	private int producePortNumber() {
-		
-		return Integer.parseInt(p.getProperty("elasticSearchPort").trim());
+
+		return Integer.parseInt(properties.getProperty("elasticSearchPort").trim());
 	}
-	
+
 	@Produces
-	private File[] produceFilesPath() {
-		final String path = p.getProperty("pathToFiles");
-		return new File(path).listFiles();
-	}
+	private Client produceClient() {
 
-	
-
-	/*private void produceFilesPath() {
-
-		final Properties p = new Properties();
-
-		final ClassLoader loader = Thread.currentThread().getContextClassLoader();
-
-		InputStream input = null;
-		String indexName = null;
-		String host = null;
-		int portNumber = 0;
-		String type = null;
+		Client client = null;
+		String host = produceHostName();
+		int portNumber = producePortNumber();
 
 		try {
-
-			input = loader.getResourceAsStream("config.properties");
-
-			p.load(input);
-
-			final String path = p.getProperty("pathToFiles");
-
-			indexName = p.getProperty("index");
-			// produceIndexName(indexName);
-
-			host = p.getProperty("elasticSearchHost").trim();
-			// produceHostName(host);
-
-			type = p.getProperty("type");
-			// produceTypeName(type);
-
-			String port = p.getProperty("elasticSearchPort").trim();
-
-			portNumber = Integer.parseInt(port);
-			// producePort(portNumber);
-
-			files = new File(path).listFiles();
-
-		}
-
-		catch (IOException e) {
+			client = TransportClient.builder().build()
+					.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(host), portNumber));
+		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		// return files;
-	}*/
+
+		return client;
+	}
 
 }

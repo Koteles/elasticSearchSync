@@ -12,7 +12,9 @@ import javax.inject.Inject;
 
 
 /**
- * Session Bean that is initialized upon application startup. In this class, a programmatic timer is implemented
+ * Session Bean that is initialized upon application startup. 
+ * In this class, a programmatic timer is implemented
+ * 
  */
 
 @Singleton
@@ -22,8 +24,10 @@ public class IntervalTimerDemo {
 
 	@Inject
 	private static ElasticSearchService service;
+	
 	@Inject
 	private static long timer;
+	
 	@Resource
 	private TimerService timerService;
 
