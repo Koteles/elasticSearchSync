@@ -17,6 +17,7 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import com.model.Config;
 import com.qualifiers.HostName;
 import com.qualifiers.IndexName;
+import com.qualifiers.PortNumber;
 import com.qualifiers.TypeName;
 
 public class ResourcesProducer {
@@ -75,6 +76,7 @@ public class ResourcesProducer {
 	}
 
 	@Produces
+	@PortNumber
 	private int producePortNumber() {
 
 		return Integer.parseInt(properties.getProperty("elasticSearchPort").trim());

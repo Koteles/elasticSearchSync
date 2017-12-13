@@ -62,7 +62,6 @@ public class StartClosingBell {
 		
 		String put = putUrl + logId + "/start";
 		try {
-
 			System.out.println(putRequest.sendPUT(put));
 
 		} catch (IOException e) {

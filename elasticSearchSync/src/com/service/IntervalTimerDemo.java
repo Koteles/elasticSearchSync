@@ -45,8 +45,8 @@ public class IntervalTimerDemo {
 		
 		ScheduleExpression schedule = new ScheduleExpression();
 		schedule.dayOfWeek("*");
-		schedule.minute("00");
-		schedule.hour("9");
+		schedule.minute("53");
+		schedule.hour("8");
 		timerService.createCalendarTimer(schedule);
 
 		//timerService.createTimer(0, timer, "IntervalTimer");

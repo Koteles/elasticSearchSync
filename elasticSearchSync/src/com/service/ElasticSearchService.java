@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.model.Student;
 import com.qualifiers.HostName;
 import com.qualifiers.IndexName;
+import com.qualifiers.PortNumber;
 import com.qualifiers.TypeName;
 
 
@@ -47,7 +48,7 @@ public class ElasticSearchService {
 	@Inject @TypeName
 	private String type;
 	
-	@Inject
+	@Inject @PortNumber	
 	private int port;
 	
 	public void addToElasticSearch() {
